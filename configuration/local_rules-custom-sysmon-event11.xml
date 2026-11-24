@@ -1,0 +1,7 @@
+<!-- Merge this rule inside the existing local rule group in local_rules.xml.
+     The built-in parent rule 61613 must NOT be copied or duplicated. -->
+<rule id="100120" level="7">
+  <if_sid>61613</if_sid>
+  <description>Sysmon: Windows event detected - Event ID $(win.system.eventID)</description>
+  <group>sysmon,</group>
+</rule>
