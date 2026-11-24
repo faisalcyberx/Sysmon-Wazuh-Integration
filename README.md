@@ -2,53 +2,74 @@
 
 A practical SOC lab demonstrating Microsoft Sysmon telemetry collection on a Windows endpoint, centralized monitoring with Wazuh SIEM, and a custom detection rule for Sysmon Event ID 11 (FileCreate).
 
-## Project overview
+## Project Overview
 
 | Item | Details |
 |---|---|
 | SIEM | Wazuh |
 | Manager | Ubuntu on AWS EC2 |
 | Endpoint | Microsoft Windows |
-| Endpoint agent | Wazuh Agent |
-| Telemetry source | Microsoft Sysmon Operational event channel |
-| Custom detection | Rule ID `100120`, severity level `7` |
-| Parent rule | Built-in Wazuh Rule ID `61613` |
+| Endpoint Agent | Wazuh Agent |
+| Telemetry Source | Microsoft Sysmon Operational Event Channel |
+| Custom Detection | Rule ID `100120`, Severity Level `7` |
+| Parent Rule | Built-in Wazuh Rule ID `61613` |
 
-**Lab status:** Successfully implemented and verified in the documented environment.
+**Lab Status:** Successfully implemented and verified in the documented environment.
 
-## Event flow
+## Event Flow
 
 ```text
 Windows Endpoint
-   → Microsoft Sysmon
-   → Windows Event Channel
-   → Wazuh Agent
-   → Wazuh Manager (AWS EC2)
-   → Wazuh Detection Rules
-   → Wazuh Dashboard
+    ↓
+Microsoft Sysmon
+    ↓
+Windows Event Channel
+    ↓
+Wazuh Agent
+    ↓
+Wazuh Manager (AWS EC2)
+    ↓
+Wazuh Detection Rules
+    ↓
+Wazuh Dashboard
 ```
 
-## What this project demonstrates
+## What This Project Demonstrates
 
 - Installing and configuring Microsoft Sysmon.
 - Collecting Sysmon Operational events with the Wazuh Agent.
 - Verifying telemetry in Windows Event Viewer and Wazuh.
 - Understanding the built-in Wazuh parent rule for Sysmon Event ID 11.
-- Creating a custom Wazuh rule that produces a customized alert description.
-- Validating the XML rules file and verifying alerts in `alerts.json` and the Dashboard.
+- Creating a custom Wazuh rule with a customized alert description.
+- Validating XML rules and verifying alerts in `alerts.json` and the Dashboard.
 
-## Repository structure
+## Repository Structure
 
 ```text
 Sysmon-Wazuh-Integration/
+│
 ├── README.md
+│
 ├── configuration/
 │   ├── wazuh-agent-sysmon-localfile.xml
 │   └── local_rules-custom-sysmon-event11.xml
+│
 ├── docs/
 │   └── TROUBLESHOOTING.md
+│
 └── screenshots/
-    └── README.md
+    ├── 01-wazuh-agent-active.PNG
+    ├── 02-sysmon-download-and-extraction.PNG
+    ├── 03-sysmon-configuration-downloaded.PNG
+    ├── 04-sysmon-installation-success.PNG
+    ├── 05-sysmon-events-in-event-viewer.PNG
+    ├── 06-wazuh-agent-sysmon-configuration.PNG
+    ├── 07-wazuh-agent-restarted.PNG
+    ├── 10-wazuh-custom-sysmon-rule.PNG
+    ├── 11-wazuh-custom-rule-validation.PNG
+    ├── 12-sysmon-test-event-generated.PNG
+    ├── 13-sysmon-custom-rule-alert-json.PNG
+    └── 14-sysmon-custom-rule-dashboard.PNG
 ```
 
 ## Prerequisites
@@ -72,15 +93,17 @@ Get-Service -Name Wazuh
 
 Expected status: `Running`.
 
-### 2. Download and extract Sysmon
+### 2. Download and Extract Sysmon
 
-Download Sysmon from the official Microsoft Sysinternals page:
+Download Sysmon from Microsoft's official Sysinternals page:
 
 https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon
 
-Extract the archive to `C:\Sysmon`. Confirm that `Sysmon64.exe` is present (use the appropriate executable for your system architecture).
+Extract the archive to `C:\Sysmon`.
 
-### 3. Download the Sysmon configuration
+Confirm that `Sysmon64.exe` is present (use the appropriate executable for your system architecture).
+
+### 3. Download the Sysmon Configuration
 
 Use the configuration referenced by the Wazuh lab resource:
 
@@ -102,7 +125,7 @@ Get-Service -Name Sysmon64
 
 Expected status: `Running`.
 
-### 5. Verify local Sysmon events
+### 5. Verify Local Sysmon Events
 
 Open Event Viewer (`eventvwr.msc`) and navigate to:
 
@@ -126,7 +149,9 @@ Open the existing Wazuh Agent configuration file as Administrator:
 
 `C:\Program Files (x86)\ossec-agent\ossec.conf`
 
-Add the block from [configuration/wazuh-agent-sysmon-localfile.xml](configuration/wazuh-agent-sysmon-localfile.xml) **inside the existing** `<ossec_config>` root element. Do not add a second root element.
+Add the block from [configuration/wazuh-agent-sysmon-localfile.xml](configuration/wazuh-agent-sysmon-localfile.xml) inside the existing `<ossec_config>` root element.
+
+Do not add a second root element.
 
 Restart the Agent:
 
@@ -135,7 +160,7 @@ Restart-Service -Name Wazuh
 Get-Service -Name Wazuh
 ```
 
-### 7. Verify Sysmon telemetry in Wazuh
+### 7. Verify Sysmon Telemetry in Wazuh
 
 In the Wazuh Dashboard, use the appropriate time range and this DQL query:
 
@@ -149,15 +174,19 @@ For Event ID 11:
 data.win.system.eventID:11
 ```
 
-Note: the Dashboard Alerts view displays events that match Wazuh detection rules. Raw event visibility may require archive data collection and configuration; telemetry collection and alert generation are related but distinct.
+Note: The Dashboard Alerts view displays events that match Wazuh detection rules. Raw event visibility may require archive data collection and configuration; telemetry collection and alert generation are related but distinct.
 
-### 8. Understand the built-in parent rule
+### 8. Understand the Built-in Parent Rule
 
-The lab uses Wazuh's existing Rule ID `61613` for Sysmon Event ID 11. This is a built-in ruleset rule. **Do not copy it into `local_rules.xml` or create a duplicate ID.**
+The lab uses Wazuh's existing Rule ID `61613` for Sysmon Event ID 11.
+
+This is a built-in ruleset rule.
+
+**Do not copy it into `local_rules.xml` or create a duplicate ID.**
 
 The custom rule uses `61613` as its parent.
 
-### 9. Add the custom Wazuh rule
+### 9. Add the Custom Wazuh Rule
 
 On the Wazuh Manager (Ubuntu on AWS EC2), back up the local rules file:
 
@@ -175,7 +204,7 @@ Add the contents of [configuration/local_rules-custom-sysmon-event11.xml](config
 
 Do not remove existing rules, create an unnecessary duplicate group, or reuse a Rule ID already in use.
 
-### 10. Validate and restart the Manager
+### 10. Validate and Restart the Manager
 
 ```bash
 sudo xmllint --noout /var/ossec/etc/rules/local_rules.xml
@@ -183,13 +212,15 @@ sudo systemctl restart wazuh-manager
 sudo systemctl is-active wazuh-manager
 ```
 
-Expected service result: `active`. If validation or restart fails, review the Manager log before proceeding:
+Expected service result: `active`.
+
+If validation or restart fails, review the Manager log:
 
 ```bash
 sudo tail -n 50 /var/ossec/logs/ossec.log
 ```
 
-### 11. Generate a controlled FileCreate test
+### 11. Generate a Controlled FileCreate Test
 
 In elevated PowerShell on Windows:
 
@@ -200,7 +231,7 @@ New-Item -Path $testFile -ItemType File
 
 This creates a test file and should generate Sysmon Event ID 11 when the active Sysmon configuration monitors that activity.
 
-### 12. Verify the custom alert
+### 12. Verify the Custom Alert
 
 On the Wazuh Manager:
 
@@ -226,36 +257,110 @@ In the Dashboard, search:
 rule.id:100120
 ```
 
-Confirm the agent, Sysmon channel, Event ID 11, Rule ID 100120, level 7, and custom description. The test is benign file-creation activity, not evidence of malware.
+Confirm the agent, Sysmon channel, Event ID 11, Rule ID 100120, level 7, and custom description.
 
-## Custom rule summary
+The test is benign file-creation activity, not evidence of malware.
+
+## Custom Rule Summary
 
 ```xml
 <rule id="100120" level="7">
-  <if_sid>61613</if_sid>
-  <description>Sysmon: Windows event detected - Event ID $(win.system.eventID)</description>
-  <group>sysmon,</group>
+    <if_sid>61613</if_sid>
+    <description>Sysmon: Windows event detected - Event ID $(win.system.eventID)</description>
+    <group>sysmon,</group>
 </rule>
 ```
 
 This custom rule is scoped to events matched by parent rule `61613` (Sysmon Event ID 11 in this lab). It does not change descriptions for every Sysmon Event ID.
 
-## Evidence
+## Lab Evidence & Screenshots
 
-The `screenshots/` directory contains a naming checklist. Add your own genuine lab screenshots there; no placeholder or sample screenshot is presented as real evidence.
+The following screenshots document the actual implementation and verification process.
+
+### 1. Wazuh Agent Status
+
+![Wazuh Agent Active](screenshots/01-wazuh-agent-active.PNG)
+
+**Description:** Verification that the Wazuh Agent service is running on the Windows endpoint.
+
+### 2. Sysmon Download and Extraction
+
+![Sysmon Download and Extraction](screenshots/02-sysmon-download-and-extraction.PNG)
+
+**Description:** Sysmon package downloaded and extracted on the Windows endpoint.
+
+### 3. Sysmon Configuration
+
+![Sysmon Configuration](screenshots/03-sysmon-configuration-downloaded.PNG)
+
+**Description:** Sysmon configuration file downloaded and prepared for installation.
+
+### 4. Sysmon Installation
+
+![Sysmon Installation](screenshots/04-sysmon-installation-success.PNG)
+
+**Description:** Successful installation of Microsoft Sysmon.
+
+### 5. Sysmon Events in Event Viewer
+
+![Sysmon Events](screenshots/05-sysmon-events-in-event-viewer.PNG)
+
+**Description:** Sysmon Operational events visible in Windows Event Viewer.
+
+### 6. Wazuh Agent Sysmon Configuration
+
+![Wazuh Agent Configuration](screenshots/06-wazuh-agent-sysmon-configuration.PNG)
+
+**Description:** Sysmon Event Channel collection configured in the Wazuh Agent.
+
+### 7. Wazuh Agent Restart
+
+![Wazuh Agent Restarted](screenshots/07-wazuh-agent-restarted.PNG)
+
+**Description:** Wazuh Agent restarted after configuration changes.
+
+### 8. Custom Wazuh Sysmon Rule
+
+![Custom Wazuh Rule](screenshots/10-wazuh-custom-sysmon-rule.PNG)
+
+**Description:** Custom Wazuh Rule ID `100120` configured for Sysmon Event ID 11.
+
+### 9. Custom Rule Validation
+
+![Custom Rule Validation](screenshots/11-wazuh-custom-rule-validation.PNG)
+
+**Description:** XML validation and Wazuh Manager service verification.
+
+### 10. Sysmon Test Event
+
+![Sysmon Test Event](screenshots/12-sysmon-test-event-generated.PNG)
+
+**Description:** Controlled file creation to generate a Sysmon Event ID 11.
+
+### 11. Custom Rule Alert in JSON
+
+![Custom Rule Alert JSON](screenshots/13-sysmon-custom-rule-alert-json.PNG)
+
+**Description:** Custom Rule ID `100120` verified in Wazuh `alerts.json`.
+
+### 12. Custom Rule Alert in Dashboard
+
+![Custom Rule Dashboard](screenshots/14-sysmon-custom-rule-dashboard.PNG)
+
+**Description:** Custom Sysmon alert displayed in the Wazuh Dashboard.
 
 ## Troubleshooting
 
 See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 
-## Security considerations
+## Security Considerations
 
 - Download Sysmon from Microsoft's official source.
 - Use a trusted Sysmon configuration.
 - Restrict access to endpoint and Manager configuration files.
 - Back up `local_rules.xml` before editing.
 - Use unique custom Rule IDs.
-- Redact public screenshots to avoid exposing credentials, tokens, public IPs, or other sensitive information.
+- Redact credentials, tokens, account identifiers and sensitive network information from public screenshots.
 - Keep Wazuh and Sysmon components updated.
 
 ## References
@@ -267,5 +372,9 @@ See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 5. [Wazuh Ruleset documentation](https://documentation.wazuh.com/current/user-manual/ruleset/index.html)
 
 ---
-**Author:** Faisal CyberX  
-**Purpose:** Practical SIEM and SOC analyst portfolio lab
+
+**Author:** Faisal CyberX
+
+**Purpose:** Practical SIEM and SOC Analyst Portfolio Lab
+
+**Category:** Cybersecurity | SIEM | Endpoint Monitoring | Threat Detection
