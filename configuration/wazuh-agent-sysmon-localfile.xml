@@ -1,0 +1,6 @@
+<!-- Merge this block inside the existing <ossec_config> root in ossec.conf.
+     Do not create a second <ossec_config> root element. -->
+<localfile>
+  <location>Microsoft-Windows-Sysmon/Operational</location>
+  <log_format>eventchannel</log_format>
+</localfile>
